@@ -8,7 +8,7 @@ const Note = require("../modules/notes")
 router.post("/addnote",      
 // Validating a user input using express-validator. 
     [body('title', "description must be atleast 1 characters long").isLength({ min: 1 }),
-    body('description', "description must be atleast 5 characters long").isLength({ min: 5 })],
+    body('description', "description must be atleast 2 characters long").isLength({ min: 2 })],
 
     fetchUser,
 

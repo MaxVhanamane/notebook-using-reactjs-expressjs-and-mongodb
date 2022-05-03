@@ -4,16 +4,18 @@ const bcrypt = require('bcryptjs');
 // jwt is used to generate token. token is used to verify the user once he sign in. like if he wants to visit another secured page which requires
 // authentication at that time he doesn't have to give us all his credentials again we can use the token which we gave him when he signed in
 // to verify that this is the same user who was signed in.
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 // Routers are very helpful in separating concerns and keep relevant portions of our code together. They help in building maintainable code.
 // we can use app.get(),app.post() etc. but that makes index.js file not very maintainable to put all the routes into separate folder for the 
 // sake of maintainabilty we use routers.
 const router = express.Router()
 const User = require("../modules/Users") // to add items in Users table/collection
+require("dotenv").config() // to store JWT_PRIVATE_KEY in .env file
 const fetchUser =require("../middleware/fetchuser")
 
-const JWT_PRIVATE_KEY = "abkdjafk$*&*^$*^*jfdjjfsajfkljhs343254325"
+const JWT_PRIVATE_KEY = process.env.JWT_PRIVATE_KEY
+
 
 // Route 1 : Create user.
 router.post("/createuser",
@@ -25,6 +27,7 @@ router.post("/createuser",
     body('password', "Password must be atleast 5 characters long").isLength({ min: 5 })],
 
     async (req, res) => {
+        let success=false;
 
         // const errors = validationResult(req) line of code is from express-validator module. which will give us an error as a object when 
         // validation fails.
@@ -67,8 +70,9 @@ router.post("/createuser",
             }
             // generating jwt token
             const authToken = jwt.sign(data, JWT_PRIVATE_KEY);
-
-            res.json({authToken}) // in es6 I don't have to write {authToken:authToken} I can directly write {authToken} which will be same as {authToken:authToken}
+            success=true
+            const userName= req.body.name
+            res.json({success,authToken,userName}) // in es6 I don't have to write {authToken:authToken} I can directly write {authToken} which will be same as {authToken:authToken}
         }
         // Catching the error if we couldn't add the user in our database.
         catch (err) {
@@ -88,6 +92,7 @@ router.post("/createuser",
     body('password',"Invalid password").exists({checkFalsy:true})],
     // .exists({checkFalsy:true}), fields with falsy values (eg "", 0, false, null) are not allowed as password. read express-validator doc.
     async (req, res) => {
+        let success=false;
 
         // const errors = validationResult(req) line of code is from express-validator module.
         const errors = validationResult(req);
@@ -125,11 +130,12 @@ router.post("/createuser",
             id: foundUser.id
         }
     }
-
+    const userName=foundUser.name
+    success=true
     // generating jwt token
     const authToken = jwt.sign(data, JWT_PRIVATE_KEY);
 
-        res.json({authToken})
+       return res.json({success,authToken,userName})
     
     // If something goes wrong... catch the error.   
     }   catch (err) {
